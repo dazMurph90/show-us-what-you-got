@@ -7,7 +7,7 @@
     "compile": "babel src/ -d lib -s",
     "test": "./node_modules/.bin/_mocha \"lib/**/*-tests.js\"",
     "go": "node lib/index",
-    "start": "nodemon -x \"npm run compile && npm run test && npm go\""
+    "start": "nodemon -x \"npm run compile && npm run test && npm run go\""
   },
   "repository": {
     "type": "git",

@@ -64,7 +64,7 @@ describe("github service", () => {
         gitHubService.getUsersForOrganisation(organisationId);
 
         //Assert
-        httpGetStub.getCall(0).args[0].endsWith("?access_token=" + secret).should.equal(true);
+        httpGetStub.getCall(0).args[0].endsWith("access_token=" + secret).should.equal(true);
     });
 
     it("should prepend base url to url", () => {
