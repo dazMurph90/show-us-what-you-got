@@ -36,7 +36,6 @@ class Http {
         return new Promise((resolve, reject) => {
             this.request.get(requestOptions, (error, response, body) => {
                 if (!error && response.statusCode == 200) {
-                    //console.log(response.headers.link)
                     resolve(response.headers);
                 } else {
                     reject(JSON.stringify(response));
