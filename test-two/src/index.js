@@ -7,7 +7,7 @@ import Controller from "./Controller"
 
 const baseUrl = "https://api.github.com/";
 const organisationId = "uber";
-const gitHubApiAuthToken = "915fa9458cabcffab770ba07faadfc0b23ea707e"; //add your GitHub API OAuth key here to increase request limit
+const gitHubApiAuthToken = "915fa9458cabcffab770ba07faadfc0b23ea707e"; //OAuth key
 
 let logger = new Logger();
 let http = new Http();
@@ -42,7 +42,7 @@ gitHubService.getHeaderForUsers(organisationId).then(function(header){
 
 /*  -------------------------- MISC FUNCTIONS -------------------------------  */
 
-//extracts amount of pages for users request
+//extracts amount of pages for users from the API response header
 function getAmountOfPagesFromHeader(header){
     //API stores amount of pages in response headers 'link' field
     //amount of pages is in the query parameters of link where rel="last"
