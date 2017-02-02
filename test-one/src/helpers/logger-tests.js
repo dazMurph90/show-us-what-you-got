@@ -26,4 +26,5 @@ describe("logger", () => {
         //Assert
         expect(console.log.calledWith(message)).to.be.equal(true);
     });
+    
 });
