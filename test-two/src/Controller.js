@@ -11,9 +11,8 @@ class Controller {
     
     //retreives all usernames from the github API
     //runs getUsersByPage by amountPages times
-    getAllUsers(callback){
+    getAllUsers(){
         this.logger.log("Getting all users...")
-        
         var promises = []
 
         //push promises from api calls to array
@@ -21,11 +20,10 @@ class Controller {
             promises.push(this.getUsersByPage(i))
         }
 
-
         //event for when all api calls return
-        Promise.all(promises).then(() => { 
+        return Promise.all(promises).then(() => { 
             this.logger.log("Complete.")
-            callback()
+            //resolve()
         }).catch((error) => {
             this.logger.log("Error: " + error);
         });
@@ -62,28 +60,24 @@ class Controller {
     }
     
     //gets repos for all users
-    getAllUsersRepos(callback){
-        var ctrl = this
-        ctrl.logger.log("Getting all users repos...")
+    getAllUsersRepos(){
+        this.logger.log("Getting all users repos...")
 
-        var promises = []
-
+        var promises = [];
+        var ctrl = this;
+        
         ctrl.userArray.forEach((user) => {
             var promise = ctrl.gitHubService.getUsersRepos(user.login).then((repos) => {
-
-                //console.log(user.login)
+                
                 repos.forEach((repo) => {
                     user.repos.push(repo)
-                    //console.log("\t" + repo.name)
                 })
-
             })
             promises.push(promise)
         })
 
-        Promise.all(promises).then(function(res){
+        return Promise.all(promises).then(function(res){
             ctrl.logger.log("Complete.")
-            callback()
         })
 
     }

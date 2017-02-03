@@ -3,11 +3,18 @@ import GitHubService from './services/github';
 import Http from './helpers/http';
 import Url from "url";
 import QueryString from "querystring";
-import Controller from "./Controller"
+import Controller from "./Controller";
+import AuthManager from "./helpers/AuthManager";
+
 
 const baseUrl = "https://api.github.com/";
 const organisationId = "uber";
-const gitHubApiAuthToken = "915fa9458cabcffab770ba07faadfc0b23ea707e"; //OAuth key
+//const gitHubApiAuthToken = ""; //OAuth key
+var authManager = new AuthManager()
+const gitHubApiAuthToken = authManager.getAuth("github");
+
+
+
 
 let logger = new Logger();
 let http = new Http();
@@ -19,19 +26,18 @@ var controller = new Controller(organisationId,gitHubService, logger)
 
 //github API paginates the list of ubers users to 30 per page
 //we need to get amount of pages first(IE amount of requests to make)
-gitHubService.getHeaderForUsers(organisationId).then(function(header){
+gitHubService.getHeaderForUsers(organisationId).then((header) => {
     //param header returns the header information from an API call
     
     controller.amountPages = getAmountOfPagesFromHeader(header)
     
-    controller.getAllUsers(function(){
-        
-        controller.getAllUsersRepos(function(){
-            controller.displayAll()
+    controller.getAllUsers().then(() => {
+         controller.getAllUsersRepos().then(() => {
+             controller.displayAll()
             //controller.ouputToFile("output.txt")
-        })
-        
+         })
     })
+
     
 }).catch((error) => {
     logger.log("Error: " + error);
@@ -43,7 +49,7 @@ gitHubService.getHeaderForUsers(organisationId).then(function(header){
 /*  -------------------------- MISC FUNCTIONS -------------------------------  */
 
 //extracts amount of pages for users from the API response header
-function getAmountOfPagesFromHeader(header){
+var getAmountOfPagesFromHeader = (header) => {
     //API stores amount of pages in response headers 'link' field
     //amount of pages is in the query parameters of link where rel="last"
     
