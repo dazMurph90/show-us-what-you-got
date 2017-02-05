@@ -12,9 +12,6 @@ const organisationId = "uber";
 var authManager = new AuthManager()
 const gitHubApiAuthToken = authManager.getAuth("github");
 
-
-
-
 let logger = new Logger();
 let http = new Http();
 
@@ -22,23 +19,24 @@ let gitHubService = new GitHubService(baseUrl, http, gitHubApiAuthToken);
 
 var controller = new Controller(organisationId,gitHubService, logger)
 
-
-//github API paginates the list of ubers users to 30 per page
-//we need to get amount of pages first(IE amount of requests to make)
-gitHubService.getHeaderForUsers(organisationId).then((header) => {
-    //param header returns the header information from an API call
+controller.getAllUsers().then(() => {
     
-    controller.amountPages = gitHubService.getAmountOfPagesFromHeader(header)
-    
-    controller.getAllUsers().then(() => {
-         controller.getAllUsersRepos().then(() => {
-             controller.displayAll()
-            //controller.ouputToFile("output.txt")
-         })
-    })
-
-    
+     controller.getRepos().then(() => {
+         
+        controller.displayAll()
+        //controller.displayStats()
+        //controller.ouputToFile("output.txt")
+        
+     })
+     
 }).catch((error) => {
+    
     logger.log("Error: " + error);
+    
 });
+
+
+
+
+
 

@@ -13,21 +13,28 @@ class Controller {
     //runs getUsersByPage by amountPages times
     getAllUsers(){
         this.logger.log("Getting all users...")
-        var promises = []
-
-        //push promises from api calls to array
-        for(var i = 1; i<=this.amountPages; i++){
-            promises.push(this.getUsersByPage(i))
-        }
-
-        //event for when all api calls return
-        return Promise.all(promises).then(() => { 
-            this.logger.log("Complete.")
-            //resolve()
-        }).catch((error) => {
-            this.logger.log("Error: " + error);
-        });
+        var ctrl = this;
         
+        return new Promise(function(resolve,reject){
+            var promises = []
+            
+            //get header data to find amt of pages of users 
+            ctrl.gitHubService.getHeaderForUsers(ctrl.organisationId).then((header) => {
+    
+                ctrl.amountPages = ctrl.gitHubService.getAmountOfPagesFromHeader(header)
+                
+                for(var i = 1; i<= ctrl.amountPages; i++){
+                    promises.push(ctrl.getUsersByPage(i))
+                }
+
+                Promise.all(promises).then(() => { 
+                    ctrl.logger.log("Complete.")
+                    resolve(ctrl.userArray)
+                }).catch((error) => {
+                    ctrl.logger.log("Error: " + error);
+                });
+            })
+        })
     }
     
     
@@ -36,6 +43,7 @@ class Controller {
 
         var ctrl = this;
        return new Promise(function(resolve,reject){
+           
            ctrl.gitHubService.getUsersForOrganisation(ctrl.organisationId,pageNumber).then((users) => {
 
                 users.forEach((user) => {
@@ -43,7 +51,8 @@ class Controller {
                     //create user object
                     var newUser = {
                         "login" : user.login,
-                        "repos" : []
+                        "repos" : [],
+                        "amtRepoPages" : 0
                     }
 
                     //store in array
@@ -60,29 +69,96 @@ class Controller {
     }
     
     //gets repos for all users
-    getAllUsersRepos(){
+    getRepos(){
         this.logger.log("Getting all users repos...")
-
-        var promises = [];
-        var ctrl = this;
         
-        ctrl.userArray.forEach((user) => {
-            var promise = ctrl.gitHubService.getUsersRepos(user.login).then((repos) => {
-                
-                repos.forEach((repo) => {
-                    user.repos.push(repo)
-                })
-            })
-            promises.push(promise)
-        })
-
-        return Promise.all(promises).then(function(res){
-            ctrl.logger.log("Complete.")
-        })
+        var ctrl = this;
+        return new Promise(function(resolve,reject){
+            
+            ctrl.setAllUsersRepoPageAmount().then(() => {
+                ctrl.getAllUserRepos().then((data) => {
+                    ctrl.logger.log("Complete.")
+                    resolve();
+                });
+            }); 
+            
+        });
 
     }
+    
+    setAllUsersRepoPageAmount(){
+        var ctrl = this;
+        
+        var promises = [];
+        
+        return new Promise(function(resolve,reject){
+            
+            ctrl.userArray.forEach((user) => {
+                promises.push(ctrl.setUsersRepoPageAmount(user))
+            });
 
-    //displays username, then users repos/
+            Promise.all(promises).then(function(res){
+                resolve(ctrl.userArray)
+            })
+        })
+        
+        
+    }
+    
+    //set amount of repo pages for a single user
+    setUsersRepoPageAmount(user){
+        var ctrl = this;
+        return new Promise(function(resolve,reject){
+            ctrl.gitHubService.getHeaderForRepos(user.login).then((header) => {
+                user.amtRepoPages = ctrl.gitHubService.getAmountOfPagesFromHeader(header)
+                resolve(user);
+            });
+        });
+    }
+    
+    //get all repos for all users
+    getAllUserRepos(){
+        var ctrl = this;
+        
+        return new Promise(function(resolve,reject){
+            var promises = []
+
+            ctrl.userArray.forEach((user) => {
+                for(var i = 1; i <= user.amtRepoPages; i++){
+                    promises.push(ctrl.getUsersReposByPage(user,i))
+                }
+            });
+
+            Promise.all(promises).then(function(res){
+                resolve(ctrl.userArray)
+            })
+            
+        });
+        
+    }
+    
+    //get repos for a single user by page
+    getUsersReposByPage(user,pageNumber){
+        var ctrl = this;
+        return new Promise(function(resolve, reject){
+
+            ctrl.gitHubService.getUsersRepos(user.login, pageNumber).then((repos) => {
+                
+                repos.forEach((repo) => {
+                    user.repos.push(repo.name)
+                })
+
+                resolve(user);
+            }).catch((error) => {
+                ctrl.logger.log("Error: " + error);
+            });
+            
+        });
+            
+
+    }
+   
+    //displays username, then users repos
     displayAll(){
         
         this.userArray.forEach((user) => {
@@ -90,7 +166,7 @@ class Controller {
             this.logger.log("username: " + user.login)
 
             user.repos.forEach((repo) => {
-                this.logger.log("\t" + repo.name)
+                this.logger.log("\t" + repo)
 
             })
         })
@@ -115,7 +191,7 @@ class Controller {
             text += "username: " + user.login + "\n";
 
             user.repos.forEach((repo) => {
-                text += "\t" + repo.name + "\n"
+                text += "\t" + repo + "\n"
             })
         })
         
